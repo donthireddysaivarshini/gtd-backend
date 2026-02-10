@@ -1,0 +1,6 @@
+pip install requests
+pip install requests django-allauth dj-rest-auth djangorestframework-simplejwt python-dotenv django-cors-headers
+pip install cryptography
+
+gtdfashion@gmail.com
+admin123
