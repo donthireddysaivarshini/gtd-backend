@@ -7,6 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('accounts.urls')),
     path('accounts/', include('allauth.urls')), # Required for Social Login
+    path('api/store/', include('store.urls')), # Link store urls
 ]
 
 if settings.DEBUG:

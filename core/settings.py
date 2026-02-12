@@ -33,6 +33,7 @@ INSTALLED_APPS = [
 
     # Local Apps
     'accounts',
+     'store',
 ]
 
 SITE_ID = 1
@@ -143,4 +144,19 @@ REST_AUTH = {
     'JWT_AUTH_COOKIE': None,          # Disable cookies to force JSON response
     'JWT_AUTH_REFRESH_COOKIE': None,
     'JWT_AUTH_HTTPONLY': False,
+}
+JAZZMIN_SETTINGS = {
+    "site_title": "Glorious Threads Admin",
+    "site_header": "GTD Fashion",
+    "welcome_sign": "Welcome Admin",
+    "search_model": ["store.Product"],
+    "show_ui_builder": False,
+    "navigation_expanded": True,
+
+    # 🔥 THE FIX: Change from "horizontal_tabs" to "single"
+    # This disables the buggy tabs and shows General, Images, and Variants on ONE scrollable page.
+    "changeform_format": "single",
+    "changeform_format_overrides": {
+        "store.product": "single", # Force one-page layout for Products
+    },
 }
