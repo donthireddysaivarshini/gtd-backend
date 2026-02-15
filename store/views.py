@@ -5,6 +5,8 @@ from django.db.models import Q
 from .models import *
 from .serializers import *
 from rest_framework import generics
+from rest_framework.parsers import MultiPartParser, FormParser
+
 
 class GlobalSearchView(APIView):
     def get(self, request):
@@ -18,8 +20,8 @@ class GlobalSearchView(APIView):
         categories = Category.objects.filter(name__icontains=q)[:5]
         
         return Response({
-            "products": ProductSerializer(products, many=True).data,
-            "categories": CategorySerializer(categories, many=True).data
+            "products": ProductSerializer(products, many=True, context={'request': request}).data,
+            "categories": CategorySerializer(categories, many=True, context={'request': request}).data
         })
 
 class CategoryListView(generics.ListAPIView):
@@ -30,8 +32,8 @@ class HomeFixedDataView(APIView):
     """View providing data for New Arrivals and Best Sellers"""
     def get(self, request):
         return Response({
-            "new_arrivals": ProductSerializer(Product.objects.filter(is_new_arrival=True), many=True).data,
-            "best_sellers": ProductSerializer(Product.objects.filter(is_best_seller=True), many=True).data,
+            "new_arrivals": ProductSerializer(Product.objects.filter(is_new_arrival=True), many=True, context={'request': request}).data,
+            "best_sellers": ProductSerializer(Product.objects.filter(is_best_seller=True), many=True, context={'request': request}).data,
         })
 
 class SiteConfigView(generics.RetrieveAPIView):
@@ -98,15 +100,21 @@ class ProductDetailView(generics.RetrieveAPIView):
     # 🔥 THE FIX: Tell Django to use the slug field for lookups
     lookup_field = 'slug'
 
+    
+
 
         
 class ReviewListCreateView(generics.ListCreateAPIView): # 🔥 Support both GET and POST
     serializer_class = ReviewSerializer
+    parser_classes = (MultiPartParser, FormParser)
 
     def get_queryset(self):
-        # Only show reviews for this specific product slug
-        return Review.objects.filter(product__slug=self.kwargs['slug']).order_by('-created_at')
-
+            return Review.objects.filter(product__slug=self.kwargs['slug']).order_by('-created_at')
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
+    
     def perform_create(self, serializer):
         product = Product.objects.get(slug=self.kwargs['slug'])
         serializer.save(product=product)

@@ -8,6 +8,8 @@ urlpatterns = [
     path('api/auth/', include('accounts.urls')),
     path('accounts/', include('allauth.urls')), # Required for Social Login
     path('api/store/', include('store.urls')), # Link store urls
+    path('api/content/', include('content.urls')),
+    path('api/watch-and-buy/', include('watch_and_buy.urls')),
 ]
 
 if settings.DEBUG:

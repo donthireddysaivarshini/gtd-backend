@@ -33,11 +33,22 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         return obj.product.price + obj.price_override
 
 class ReviewSerializer(serializers.ModelSerializer):
+    # 🔥 REMOVE the SerializerMethodField line. 
+    # Just let DRF use the default ImageField so it's writable.
+
     class Meta:
         model = Review
-        # 🔥 FIX: Make product read_only so the View can set it manually
         fields = ['id', 'user_name', 'rating', 'comment', 'image', 'created_at', 'product']
         read_only_fields = ['product']
+
+    def to_representation(self, instance):
+        """This ensures the frontend gets the full absolute URL on GET requests"""
+        representation = super().to_representation(instance)
+        if instance.image:
+            request = self.context.get('request')
+            if request:
+                representation['image'] = request.build_absolute_uri(instance.image.url)
+        return representation
 
 class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)

@@ -34,7 +34,10 @@ INSTALLED_APPS = [
     # Local Apps
     'accounts',
      'store',
+     'content',
+     'watch_and_buy',
 ]
+
 
 SITE_ID = 1
 
