@@ -1,16 +1,27 @@
+from rest_framework import generics, status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, permissions
-from django.db import transaction
-from .models import Order, OrderItem
-from store.models import Product # Ensure this import is here
-from payments.razorpay_client import create_order
-from rest_framework import generics
-from .serializers import OrderSerializer
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser
+from django.db import transaction
+import logging
+
+from .models import Order, OrderItem
+from .serializers import OrderSerializer
+from payments.razorpay_client import create_order
+from store.models import Product
+
+logger = logging.getLogger(__name__)
+
+class OrderListView(generics.ListAPIView):
+    """View to list all orders for the logged-in user."""
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user).order_by('-created_at')
 
 class CheckoutView(APIView):
+    """View to create a local order and a corresponding Razorpay order."""
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
@@ -36,7 +47,6 @@ class CheckoutView(APIView):
 
                 # 2. Create Order Items
                 for item in cart_items:
-                    # 🔥 THE FIX: Use product_id instead of product to avoid model instance errors
                     OrderItem.objects.create(
                         order=order,
                         product_id=item.get('id'), 
@@ -59,22 +69,20 @@ class CheckoutView(APIView):
             }, status=status.HTTP_201_CREATED)
             
         except Exception as e:
-            # This will print the exact error to your terminal
-            print(f"Checkout Error: {str(e)}") 
+            logger.error(f"Checkout Error: {str(e)}")
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-class OrderListView(generics.ListAPIView):
-    serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).order_by('-created_at')
 @api_view(['PATCH'])
-@permission_classes([IsAdminUser]) # Only Admins can change status
+@permission_classes([permissions.IsAdminUser])
 def update_order_status(request, pk):
+    """Admin-only view to update order status."""
     try:
         order = Order.objects.get(pk=pk)
-        order.order_status = request.data.get('order_status')
-        order.save()
-        return Response({"message": "Status updated successfully"})
+        new_status = request.data.get('order_status')
+        if new_status:
+            order.order_status = new_status
+            order.save()
+            return Response({"message": f"Status updated to {new_status}"})
+        return Response({"error": "No status provided"}, status=400)
     except Order.DoesNotExist:
         return Response({"error": "Order not found"}, status=404)
