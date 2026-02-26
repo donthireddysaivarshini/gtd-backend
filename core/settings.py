@@ -33,6 +33,8 @@ INSTALLED_APPS = [
 
     # Local Apps
     'accounts',
+    'orders',
+    'payments',
      'store',
      'content',
      'watch_and_buy',
@@ -88,13 +90,14 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ]
 }
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'LEEWAY': timedelta(seconds=60),
 }
 
 # --- MODERN SOCIAL AUTH CONFIG ---
@@ -163,3 +166,5 @@ JAZZMIN_SETTINGS = {
         "store.product": "single", # Force one-page layout for Products
     },
 }
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')

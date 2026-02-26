@@ -10,7 +10,9 @@ urlpatterns = [
     path('api/store/', include('store.urls')), # Link store urls
     path('api/content/', include('content.urls')),
     path('api/watch-and-buy/', include('watch_and_buy.urls')),
-]
+    path('api/orders/', include('orders.urls')),
+    path('api/payments/', include('payments.urls')),
+]   
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
