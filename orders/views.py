@@ -76,6 +76,9 @@ class CheckoutView(APIView):
                             'first_name': data.get('firstName', ''),
                             'last_name': data.get('lastName', ''),
                             'address': data.get('shipping_address', ''),
+                            'landmark': data.get('landmark'), # ✅ Added
+                            'state': data.get('state'), # ✅ Added
+                            'country': data.get('country'), # ✅ Added
                             'city': data.get('city', ''),
                             'state': data.get('state', 'Telangana'),
                             'zip_code': data.get('zip_code', ''),
@@ -88,8 +91,11 @@ class CheckoutView(APIView):
                     user=user,
                     total_amount=total_amount,
                     shipping_address=data.get('shipping_address'),
+                    landmark=data.get('landmark'), # ✅ Added
+                    state=data.get('state'), # ✅ Added
+                    country=data.get('country'), # ✅ Added
                     city=data.get('city'),
-                    state=data.get('state', 'India'),
+                    
                     zip_code=data.get('zip_code'),
                     phone=data.get('phone'),
                 )

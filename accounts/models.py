@@ -44,7 +44,10 @@ class SavedAddress(models.Model):
     phone = models.CharField(max_length=20)
     is_default = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    landmark = models.CharField(max_length=255, blank=True, null=True) # ✅ New
+    state = models.CharField(max_length=100, default='Telangana')
+    country = models.CharField(max_length=100, default='India')
+    
     class Meta:
         ordering = ['-is_default', '-created_at']
 
