@@ -8,6 +8,7 @@ class CouponAdmin(admin.ModelAdmin):
     list_display = ('code', 'discount_type', 'value', 'active', 'valid_to')
     list_filter = ('active', 'discount_type')
     search_fields = ('code',)
+    readonly_fields = ('uses_count',)
 
 # ✅ Register SiteConfig (Miscellaneous Charges)
 @admin.register(SiteConfig)

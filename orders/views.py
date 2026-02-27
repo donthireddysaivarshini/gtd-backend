@@ -66,6 +66,18 @@ class CheckoutView(APIView):
 
         try:
             with transaction.atomic():
+                if coupon_code:
+                    try:
+                        # Use select_for_update() to prevent race conditions during flash sales
+                        coupon = Coupon.objects.select_for_update().get(code=coupon_code, active=True)
+                        if coupon.uses_count < coupon.usage_limit:
+                            coupon.uses_count += 1
+                            coupon.save()
+                        else:
+                            return Response({"error": "Coupon limit reached"}, status=400)
+                    except Coupon.DoesNotExist:
+                        pass # Or handle error if coupon was mandatory
+                
                 # ✅ FIX 1: Auto-Save Address to Profile if requested
                 if data.get('save_address'):
                     SavedAddress.objects.update_or_create(

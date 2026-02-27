@@ -126,5 +126,7 @@ class Coupon(models.Model):
     usage_limit = models.IntegerField(default=100)
     uses_count = models.IntegerField(default=0)
 
-    def __str__(self):
-        return self.code
+    def is_valid(self):
+        """Expert check for validity"""
+        now = timezone.now()
+        return self.active and self.valid_from <= now <= self.valid_to and self.uses_count < self.usage_limit

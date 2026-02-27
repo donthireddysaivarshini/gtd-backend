@@ -148,6 +148,8 @@ class ValidateCouponView(APIView):
             # Check expiry
             if coupon.valid_from > now or coupon.valid_to < now:
                 return Response({'error': 'Coupon has expired'}, status=status.HTTP_400_BAD_REQUEST)
+            if coupon.uses_count >= coupon.usage_limit:
+                return Response({'error': 'Coupon usage limit reached'}, status=status.HTTP_400_BAD_REQUEST)
             
             # Check min order value
             if order_total < coupon.min_order_value:
