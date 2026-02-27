@@ -1,6 +1,22 @@
 from django.contrib import admin
 from .models import Product, ProductImage, ProductVariant, Color, Size, Category, Review, SiteConfig
 from django.utils.html import format_html
+from .models import Coupon, SiteConfig
+
+@admin.register(Coupon)
+class CouponAdmin(admin.ModelAdmin):
+    list_display = ('code', 'discount_type', 'value', 'active', 'valid_to')
+    list_filter = ('active', 'discount_type')
+    search_fields = ('code',)
+
+# ✅ Register SiteConfig (Miscellaneous Charges)
+@admin.register(SiteConfig)
+class SiteConfigAdmin(admin.ModelAdmin):
+    list_display = ('shipping_fee', 'free_shipping_threshold', 'tax_percentage')
+    
+    def has_add_permission(self, request):
+        # Prevent multiple config entries; only allow 1
+        return SiteConfig.objects.count() == 0
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
@@ -47,4 +63,3 @@ admin.site.register(Category)
 admin.site.register(Color)
 admin.site.register(Size)
 
-admin.site.register(SiteConfig)

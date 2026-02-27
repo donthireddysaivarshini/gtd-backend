@@ -90,4 +90,4 @@ class ProductSerializer(serializers.ModelSerializer):
 class SiteConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteConfig
-        fields = '__all__'
+        fields = ('shipping_fee', 'free_shipping_threshold', 'tax_percentage')

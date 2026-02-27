@@ -6,7 +6,10 @@ from .models import *
 from .serializers import *
 from rest_framework import generics
 from rest_framework.parsers import MultiPartParser, FormParser
-
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from decimal import Decimal
+from django.utils import timezone
+from rest_framework import status
 
 class GlobalSearchView(APIView):
     def get(self, request):
@@ -36,10 +39,18 @@ class HomeFixedDataView(APIView):
             "best_sellers": ProductSerializer(Product.objects.filter(is_best_seller=True), many=True, context={'request': request}).data,
         })
 
-class SiteConfigView(generics.RetrieveAPIView):
-    serializer_class = SiteConfigSerializer
-    def get_object(self):
-        return SiteConfig.objects.first()
+# store/views.py
+class SiteConfigView(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        config = SiteConfig.objects.first()
+        if not config:
+            # Create a default if it doesn't exist yet
+            config = SiteConfig.objects.create()
+        
+        serializer = SiteConfigSerializer(config)
+        return Response(serializer.data)
     
 class WatchBuyListView(APIView):
     def get(self, request):
@@ -119,3 +130,44 @@ class ReviewListCreateView(generics.ListCreateAPIView): # 🔥 Support both GET 
         product = Product.objects.get(slug=self.kwargs['slug'])
         serializer.save(product=product)
 
+class ValidateCouponView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        code = request.data.get('code', '').strip().upper()
+        # Convert to string first to avoid float issues in Decimal
+        order_total = Decimal(str(request.data.get('order_total', 0)))
+        
+        if not code:
+            return Response({'error': 'Coupon code is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            coupon = Coupon.objects.get(code=code, active=True)
+            now = timezone.now() # ✅ Now this will work
+            
+            # Check expiry
+            if coupon.valid_from > now or coupon.valid_to < now:
+                return Response({'error': 'Coupon has expired'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check min order value
+            if order_total < coupon.min_order_value:
+                return Response({
+                    'error': f'Minimum order value of ₹{coupon.min_order_value} required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Calculate discount
+            discount = 0
+            if coupon.discount_type == 'percentage':
+                discount = (order_total * coupon.value) / 100
+            else:
+                discount = coupon.value
+            
+            return Response({
+                'success': True,
+                'discount': float(discount),
+                'code': coupon.code,
+                'message': f'Coupon {code} applied successfully!'
+            }, status=status.HTTP_200_OK)
+            
+        except Coupon.DoesNotExist:
+            return Response({'error': 'Invalid coupon code'}, status=status.HTTP_404_NOT_FOUND)
