@@ -4,5 +4,9 @@ venv/
 
 # Environment files (all variants)
 .env
-.env.*
+
 __pycache__/
+
+notes.txt
+*.sqlite3
+media/
