@@ -59,8 +59,8 @@ class Product(models.Model):
 
     is_featured_lehenga = models.BooleanField(default=False, verbose_name="In Featured Lehengas")
     is_saree_collection = models.BooleanField(default=False, verbose_name="In Sarees Collection")
-    is_kids_collection = models.BooleanField(default=False, verbose_name="In Kids Collection")
-    is_watch_and_buy = models.BooleanField(default=False) # 🔥 Added
+
+    
     
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -91,13 +91,23 @@ class ProductVariant(models.Model):
     def __str__(self):
         return f"{self.product.title} - {self.color.name} - {self.size.name}"
 
+# store/models.py
+
 class Review(models.Model):
     product = models.ForeignKey(Product, related_name='reviews', on_delete=models.CASCADE)
     user_name = models.CharField(max_length=100)
     rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
     comment = models.TextField()
     image = models.ImageField(upload_to='reviews/', null=True, blank=True)
+    
+    # ✅ NEW FIELDS FOR DYNAMIC TESTIMONIALS
+    location = models.CharField(max_length=100, default="India") 
+    is_featured = models.BooleanField(default=False, help_text="Toggle to show on Homepage Testimonials")
+    
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user_name} - {self.product.title}"
 
 class SiteConfig(models.Model):
     shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=100.00)

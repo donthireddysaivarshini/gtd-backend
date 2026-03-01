@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import GlobalSearchView, CategoryListView, HomeFixedDataView, SiteConfigView,ProductListView,ProductDetailView,ReviewListCreateView,WatchBuyListView,ValidateCouponView
+from .views import GlobalSearchView, CategoryListView, HomeFixedDataView, SiteConfigView,ProductListView,ProductDetailView,ReviewListCreateView,WatchBuyListView,ValidateCouponView,FeaturedReviewListView
 
 urlpatterns = [
     path('search/', GlobalSearchView.as_view(), name='global-search'),
@@ -12,4 +12,6 @@ urlpatterns = [
     path('products/<slug:slug>/reviews/', ReviewListCreateView.as_view(), name='product-reviews'),
     path('watch-buy/', WatchBuyListView.as_view(), name='watch-buy-list'),
     path('validate-coupon/', ValidateCouponView.as_view(), name='validate-coupon'),
+    path('featured-reviews/', FeaturedReviewListView.as_view(), name='featured-reviews'),
+
 ]

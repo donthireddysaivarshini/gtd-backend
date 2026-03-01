@@ -173,3 +173,12 @@ class ValidateCouponView(APIView):
             
         except Coupon.DoesNotExist:
             return Response({'error': 'Invalid coupon code'}, status=status.HTTP_404_NOT_FOUND)
+        
+# store/views.py
+
+class FeaturedReviewListView(generics.ListAPIView):
+    serializer_class = ReviewSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return Review.objects.filter(is_featured=True).order_by('-created_at')

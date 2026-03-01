@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import *
 from django.db.models import Avg  # <--- ADD THIS LINE
-
+from .models import Review
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -33,22 +33,17 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         return obj.product.price + obj.price_override
 
 class ReviewSerializer(serializers.ModelSerializer):
-    # 🔥 REMOVE the SerializerMethodField line. 
-    # Just let DRF use the default ImageField so it's writable.
+    product_name = serializers.ReadOnlyField(source='product.title')
+    date = serializers.SerializerMethodField()
 
     class Meta:
         model = Review
-        fields = ['id', 'user_name', 'rating', 'comment', 'image', 'created_at', 'product']
-        read_only_fields = ['product']
+        fields = ['id', 'user_name', 'rating', 'comment', 'image', 'location', 'product_name', 'date', 'is_featured']
 
-    def to_representation(self, instance):
-        """This ensures the frontend gets the full absolute URL on GET requests"""
-        representation = super().to_representation(instance)
-        if instance.image:
-            request = self.context.get('request')
-            if request:
-                representation['image'] = request.build_absolute_uri(instance.image.url)
-        return representation
+    def get_date(self, obj):
+        # Converts "2026-03-01" into "2 weeks ago" style
+        from django.utils.timesince import timesince
+        return f"{timesince(obj.created_at).split(',')[0]} ago"
 
 class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)

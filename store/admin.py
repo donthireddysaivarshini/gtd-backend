@@ -39,18 +39,19 @@ class ProductVariantInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
         'sku', 'title', 'category', 'price', 
-        'is_new_arrival', 'is_best_seller', 'is_watch_and_buy', 
-        'is_featured_lehenga', 'is_saree_collection', 'is_kids_collection'
+        'is_new_arrival', 'is_best_seller', 
+        'is_featured_lehenga', 'is_saree_collection'
     )
     list_editable = (
-        'is_new_arrival', 'is_best_seller', 'is_watch_and_buy', 
-        'is_featured_lehenga', 'is_saree_collection', 'is_kids_collection'
+        'is_new_arrival', 'is_best_seller', 
+        'is_featured_lehenga', 'is_saree_collection'
     )
     prepopulated_fields = {'slug': ('title',)} 
     inlines = [ProductImageInline, ProductVariantInline] # They will appear at the bottom
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ('user_name', 'product', 'rating', 'image_preview')
+    list_display = ('user_name', 'product', 'rating', 'is_featured','image_preview')
+    list_editable = ('is_featured',)
     readonly_fields = ('image_preview',)
 
     def image_preview(self, obj):
