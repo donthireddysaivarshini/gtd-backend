@@ -6,7 +6,7 @@ from .models import *
 from .serializers import *
 from rest_framework import generics
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated,IsAuthenticatedOrReadOnly
 from decimal import Decimal
 from django.utils import timezone
 from rest_framework import status
@@ -118,7 +118,7 @@ class ProductDetailView(generics.RetrieveAPIView):
 class ReviewListCreateView(generics.ListCreateAPIView): # 🔥 Support both GET and POST
     serializer_class = ReviewSerializer
     parser_classes = (MultiPartParser, FormParser)
-
+    permission_classes = [IsAuthenticatedOrReadOnly]
     def get_queryset(self):
             return Review.objects.filter(product__slug=self.kwargs['slug']).order_by('-created_at')
     def get_serializer_context(self):

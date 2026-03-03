@@ -2,6 +2,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from .models import WatchAndBuyVideo, VideoProductReview
 from .serializers import WatchAndBuySerializer, VideoProductReviewSerializer
+from rest_framework.permissions import IsAuthenticated
 
 class WatchAndBuyListView(generics.ListAPIView):
     queryset = WatchAndBuyVideo.objects.filter(is_active=True).order_by('-created_at')
@@ -15,7 +16,7 @@ class WatchAndBuyDetailView(generics.RetrieveAPIView):
 # 🔥 NEW: View to handle review submission
 class VideoReviewCreateView(generics.CreateAPIView):
     serializer_class = VideoProductReviewSerializer
-
+    permission_classes = [IsAuthenticated]
     def perform_create(self, serializer):
         # Link the review to the correct video based on the slug in the URL
         video_slug = self.kwargs.get('slug')
