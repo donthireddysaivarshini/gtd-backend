@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from store.models import Product  # Matching your GTD store app
-
+from watch_and_buy.models import WatchAndBuyVideo
 class Order(models.Model):
     PAYMENT_STATUS = [('Pending', 'Pending'), ('Paid', 'Paid'), ('Failed', 'Failed')]
     ORDER_STATUS = [('Processing', 'Processing'), ('Shipped', 'Shipped'), ('Delivered', 'Delivered'), ('Cancelled', 'Cancelled')]
@@ -32,15 +32,23 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.id} - {self.user.email}"
 
+# orders/models.py
+
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    PRODUCT_TYPES = [('REGULAR', 'Regular Product'), ('WATCH_BUY', 'Watch & Buy')]
     
-    # Store these as text in case the product is deleted later
-    product_name = models.CharField(max_length=255) # Matches Product.title
-    variant_label = models.CharField(max_length=100) # Matches "Size: {name}, Color: {name}"
-    price = models.DecimalField(max_digits=10, decimal_places=2) # Matches Product.price or final_price
+    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
+    
+    # Links to both potential sources (both nullable)
+    product = models.ForeignKey('store.Product', on_delete=models.SET_NULL, null=True, blank=True)
+    watch_product = models.ForeignKey(WatchAndBuyVideo, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    product_type = models.CharField(max_length=20, choices=PRODUCT_TYPES, default='REGULAR')
+    
+    product_name = models.CharField(max_length=255)
+    variant_label = models.CharField(max_length=100)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField(default=1)
 
     def __str__(self):
-        return f"{self.quantity} x {self.product_name}"
+        return f"[{self.product_type}] {self.product_name}"

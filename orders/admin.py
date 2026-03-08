@@ -4,7 +4,11 @@ from .models import Order, OrderItem
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ['product', 'product_name', 'variant_label', 'price', 'quantity']
+    fields = ['product_type', 'product', 'watch_product', 'product_name', 'variant_label', 'price', 'quantity']
+    readonly_fields = ['product_type', 'product', 'watch_product', 'product_name', 'variant_label', 'price', 'quantity']
+    def get_queryset(self, request):
+        # Optimized to prevent slow loading
+        return super().get_queryset(request).select_related('product', 'watch_product')
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):

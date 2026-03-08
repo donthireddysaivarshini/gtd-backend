@@ -6,6 +6,8 @@ from django.db import transaction
 from django.utils import timezone
 from decimal import Decimal
 import logging
+from django.conf import settings
+from watch_and_buy.models import WatchAndBuyVideo
 
 from store.models import SiteConfig, Coupon, Product
 from accounts.models import SavedAddress
@@ -36,31 +38,25 @@ class CheckoutView(APIView):
         if not cart_items:
             return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 1. Fetch Dynamic Charges from SiteConfig
         config = SiteConfig.objects.first()
         shipping_fee = config.shipping_fee if config else Decimal('100.00')
         free_threshold = config.free_shipping_threshold if config else Decimal('2000.00')
 
-        # 2. Calculate Subtotal
         item_subtotal = sum(Decimal(str(item.get('price', 0))) * int(item.get('quantity', 1)) for item in cart_items)
-        
-        # 3. Apply Shipping Logic
         final_shipping = Decimal('0.00') if item_subtotal >= free_threshold else shipping_fee
         
-        # 4. Apply Coupon Logic
         discount = Decimal('0.00')
         if coupon_code:
             try:
                 coupon = Coupon.objects.get(code=coupon_code, active=True)
                 now = timezone.now()
-                # Check validity dates and minimum order value
                 if coupon.valid_from <= now <= coupon.valid_to and item_subtotal >= coupon.min_order_value:
                     if coupon.discount_type == 'percentage':
                         discount = (item_subtotal * coupon.value) / 100
                     else:
                         discount = coupon.value
             except Coupon.DoesNotExist:
-                pass # If coupon invalid, we just don't apply a discount
+                pass 
 
         total_amount = item_subtotal + final_shipping - discount
 
@@ -68,7 +64,6 @@ class CheckoutView(APIView):
             with transaction.atomic():
                 if coupon_code:
                     try:
-                        # Use select_for_update() to prevent race conditions during flash sales
                         coupon = Coupon.objects.select_for_update().get(code=coupon_code, active=True)
                         if coupon.uses_count < coupon.usage_limit:
                             coupon.uses_count += 1
@@ -76,9 +71,8 @@ class CheckoutView(APIView):
                         else:
                             return Response({"error": "Coupon limit reached"}, status=400)
                     except Coupon.DoesNotExist:
-                        pass # Or handle error if coupon was mandatory
+                        pass 
                 
-                # ✅ FIX 1: Auto-Save Address to Profile if requested
                 if data.get('save_address'):
                     SavedAddress.objects.update_or_create(
                         user=user,
@@ -88,42 +82,54 @@ class CheckoutView(APIView):
                             'first_name': data.get('firstName', ''),
                             'last_name': data.get('lastName', ''),
                             'address': data.get('shipping_address', ''),
-                            'landmark': data.get('landmark'), # ✅ Added
-                            'state': data.get('state'), # ✅ Added
-                            'country': data.get('country'), # ✅ Added
-                            'city': data.get('city', ''),
+                            'landmark': data.get('landmark'),
                             'state': data.get('state', 'Telangana'),
+                            'country': data.get('country', 'India'),
+                            'city': data.get('city', ''),
                             'zip_code': data.get('zip_code', ''),
                             'phone': data.get('phone', ''),
                         }
                     )
 
-                # 5. Create the Local Order
                 order = Order.objects.create(
                     user=user,
                     total_amount=total_amount,
                     shipping_address=data.get('shipping_address'),
-                    landmark=data.get('landmark'), # ✅ Added
-                    state=data.get('state'), # ✅ Added
-                    country=data.get('country'), # ✅ Added
+                    landmark=data.get('landmark'),
+                    state=data.get('state'),
+                    country=data.get('country'),
                     city=data.get('city'),
-                    
                     zip_code=data.get('zip_code'),
                     phone=data.get('phone'),
                 )
-
-                # 6. Create Order Items
+                
+                # Inside CheckoutView -> post method
+                # Inside CheckoutView -> post method in views.py
                 for item in cart_items:
+                    # 1. Get details from the frontend payload
+                    p_type = item.get('product_type', 'REGULAR')
+                    raw_id = item.get('productId')
+                    is_watch_buy = (p_type == 'WATCH_BUY')
+                    
+                    print(f"DEBUG: Processing Item: {item.get('title')} | ID: {raw_id} | Type: {p_type}")
+
+                    # 2. Create the OrderItem with correct table links
                     OrderItem.objects.create(
                         order=order,
-                        product_id=item.get('id'), 
-                        product_name=item.get('title'),
-                        variant_label=f"Size: {item.get('size')}, Color: {item.get('color')}",
-                        price=Decimal(str(item.get('price'))),
-                        quantity=item.get('quantity')
+                        # If WATCH_BUY, leave 'product' as None so it doesn't link to random store items
+                        product=Product.objects.filter(id=raw_id).first() if not is_watch_buy else None,
+                        
+                        # If WATCH_BUY, link to the Video model so thumbnail/slug works
+                        watch_product=WatchAndBuyVideo.objects.filter(id=raw_id).first() if is_watch_buy else None,
+                        
+                        product_type=p_type,
+                        product_name=item.get('title') or item.get('name'),
+                        variant_label=f"Size: {item.get('size', 'N/A')}, Color: {item.get('color', 'N/A')}",
+                        price=Decimal(str(item.get('price', 0))),
+                        quantity=item.get('quantity', 1)
                     )
+                    print(f"DEBUG: Processed {item.get('name')} as {item.get('product_type')}")
 
-                # 7. Generate Razorpay Order (Create in Paise)
                 rzp_order = create_order(order.total_amount)
                 order.razorpay_order_id = rzp_order['id']
                 order.save()
@@ -131,15 +137,15 @@ class CheckoutView(APIView):
             return Response({
                 "order_id": order.id,
                 "razorpay_order_id": rzp_order['id'],
-                "amount": rzp_order['amount'], # Paise
+                "amount": rzp_order['amount'],
                 "currency": rzp_order['currency'],
-                "key": rzp_order.get('key', '') # Optional: send key from backend
+                "key": getattr(settings, "RAZORPAY_KEY_ID", ""), 
+                "order_status": order.order_status
             }, status=status.HTTP_201_CREATED)
             
         except Exception as e:
             logger.error(f"Checkout Error: {str(e)}")
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 @api_view(['PATCH'])
 @permission_classes([permissions.IsAdminUser])
 def update_order_status(request, pk):

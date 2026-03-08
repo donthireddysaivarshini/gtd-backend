@@ -9,7 +9,7 @@ class WatchAndBuyVideo(models.Model):
         upload_to='watch_buy_videos/',
         validators=[FileExtensionValidator(allowed_extensions=['mp4', 'mov', 'mkv'])]
     )
-    thumbnail = models.ImageField(upload_to='watch_buy_thumbnails/', blank=True)
+    thumbnail = models.ImageField(upload_to='watch_buy_thumbnails/', blank=False, null=False)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     original_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     
