@@ -93,6 +93,8 @@ class CheckoutView(APIView):
 
                 order = Order.objects.create(
                     user=user,
+                    first_name=data.get('firstName'), # Capturing from frontend
+                    last_name=data.get('lastName'),
                     total_amount=total_amount,
                     shipping_address=data.get('shipping_address'),
                     landmark=data.get('landmark'),

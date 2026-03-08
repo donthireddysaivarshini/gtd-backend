@@ -7,7 +7,8 @@ class Order(models.Model):
     ORDER_STATUS = [('Processing', 'Processing'), ('Shipped', 'Shipped'), ('Delivered', 'Delivered'), ('Cancelled', 'Cancelled')]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
-    
+    first_name = models.CharField(max_length=100, blank=True, null=True)
+    last_name = models.CharField(max_length=100, blank=True, null=True)
     # Matching your project's currency needs
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     
