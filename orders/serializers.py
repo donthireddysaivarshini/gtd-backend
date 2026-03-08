@@ -60,5 +60,5 @@ class OrderSerializer(serializers.ModelSerializer):
             'id', 'first_name', 'last_name', 'total_amount', 
             'payment_status', 'order_status', 'created_at', 
             'shipping_address', 'phone', 'landmark', 'city', 
-            'state', 'country', 'zip_code', 'items'
+            'state', 'country', 'zip_code', 'items','tracking_link'
         ]

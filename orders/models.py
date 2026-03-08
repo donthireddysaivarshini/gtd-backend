@@ -29,6 +29,7 @@ class Order(models.Model):
     landmark = models.CharField(max_length=255, blank=True, null=True) # ✅ New
     state = models.CharField(max_length=100, blank=True) # ✅ New
     country = models.CharField(max_length=100, default='India') #
+    tracking_link = models.URLField(max_length=500, blank=True, null=True)
     
     def __str__(self):
         return f"Order {self.id} - {self.user.email}"
