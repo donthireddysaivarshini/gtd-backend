@@ -5,6 +5,7 @@ from django.db import transaction
 from orders.models import Order
 from store.models import ProductVariant
 from .razorpay_client import verify_payment_signature
+from orders.utils import send_order_confirmation_email
 
 class VerifyPaymentView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -52,7 +53,9 @@ class VerifyPaymentView(APIView):
                         variant.save()
                 
                 order.save()
-                return Response({"message": "Payment Successful & Stock Updated"}, status=status.HTTP_200_OK)
+                send_order_confirmation_email(order.id) 
+
+                return Response({"message": "Payment Successful & Email Sent"}, status=status.HTTP_200_OK)
 
         except Order.DoesNotExist:
             return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)

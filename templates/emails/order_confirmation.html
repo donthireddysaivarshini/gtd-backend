@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* General Reset */
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9f9f9; }
+        table { border-spacing: 0; width: 100%; }
+        td { padding: 0; }
+        img { border: 0; }
+
+        /* Responsive Container */
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f9f9f9; padding-bottom: 40px; }
+        .main { background-color: #ffffff; margin: 0 auto; width: 100%; max-width: 600px; border-spacing: 0; color: #4a4a4a; }
+
+        /* Header */
+        .header { background-color: #1F2B5B; color: #ffffff; padding: 30px 20px; text-align: center; }
+        
+        /* Content Area */
+        .content { padding: 20px; }
+        .details-box { border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 20px; background-color: #fafafa; }
+        
+        /* Items Table */
+        .item-table { width: 100%; margin-top: 10px; border-bottom: 1px solid #eeeeee; }
+        .item-table th { text-align: left; padding: 10px; border-bottom: 2px solid #1F2B5B; font-size: 14px; }
+        .item-table td { padding: 10px; font-size: 14px; border-bottom: 1px solid #eeeeee; }
+
+        /* Note Section */
+        .note-banner { background-color: #fff3cd; border-left: 5px solid #ffecb5; padding: 15px; margin-top: 20px; font-size: 13px; color: #856404; }
+
+        /* Media Queries for Mobile */
+        @media screen and (max-width: 600px) {
+            .content { padding: 10px !important; }
+            .main { width: 100% !important; }
+            .item-table th, .item-table td { font-size: 12px !important; padding: 8px 5px !important; }
+        }
+    </style>
+</head>
+<body>
+    <center class="wrapper">
+        <table class="main">
+            <tr>
+                <td class="header">
+                    <h1 style="margin: 0; font-size: 24px;">Order Confirmed!</h1>
+                    <p style="margin: 5px 0 0 0; opacity: 0.8;">Order #{{ order.id }}</p>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="content">
+                    <p>Hi <strong>{{ order.first_name }}</strong>,</p>
+                    <p>Great news! Your order has been placed successfully. We're getting it ready for shipment.</p>
+
+                    <div class="details-box">
+                        <h4 style="margin: 0 0 10px 0; color: #1F2B5B;">Shipping Address</h4>
+                        <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                            {{ order.first_name }} {{ order.last_name }}<br>
+                            {{ order.shipping_address }}<br>
+                            {{ order.city }}, {{ order.state }} - {{ order.zip_code }}<br>
+                            <strong>Phone:</strong> {{ order.phone }}
+                        </p>
+                    </div>
+
+                    <h4 style="margin: 20px 0 10px 0; color: #1F2B5B;">Items Ordered</h4>
+                    <table class="item-table">
+                        <tr>
+                            <th>Product</th>
+                            <th style="text-align: center;">Qty</th>
+                            <th style="text-align: right;">Price</th>
+                        </tr>
+                        {% for item in items %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.product_name }}</strong><br>
+                                <span style="font-size: 12px; color: #777;">{{ item.variant_label }}</span>
+                            </td>
+                            <td style="text-align: center;">{{ item.quantity }}</td>
+                            <td style="text-align: right;">₹{{ item.price }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td colspan="2" style="text-align: right; padding-top: 15px;"><strong>Grand Total:</strong></td>
+                            <td style="text-align: right; padding-top: 15px;"><strong>₹{{ order.total_amount }}</strong></td>
+                        </tr>
+                    </table>
+
+                    <div class="note-banner">
+                        <strong>Shipping Policy:</strong> Your tracking link will be updated in your order history within 24-48 hours once dispatched.
+                    </div>
+
+                    <p style="text-align: center; margin-top: 30px; font-size: 12px; color: #999;">
+                        Thank you for choosing GTD Fashion!<br>
+                        If you have any questions, reply to this email.
+                    </p>
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+</html>
