@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from .models import Order, OrderItem
 import openpyxl
 from openpyxl.styles import Font
+from django.utils import timezone # Add this import
 
 # 1. EXCEL EXPORT FUNCTION
 def export_to_excel(modeladmin, request, queryset):
@@ -35,7 +36,7 @@ def export_to_excel(modeladmin, request, queryset):
             obj.total_amount,
             obj.order_status,
             obj.payment_status,
-            obj.created_at.strftime("%Y-%m-%d %H:%M") if obj.created_at else "",
+            timezone.localtime(obj.created_at).strftime("%d-%m-%Y %I:%M %p") if obj.created_at else "",
             obj.shipping_address,
             obj.landmark or "",
             obj.city or "",

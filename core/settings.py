@@ -196,3 +196,7 @@ TEMPLATES = [
         },
     },
 ]
+# settings.py
+
+TIME_ZONE = 'Asia/Kolkata'  # Change from UTC
+USE_TZ = True               # Keep this True for database consistency
