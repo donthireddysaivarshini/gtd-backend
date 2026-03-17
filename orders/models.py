@@ -3,6 +3,7 @@ from django.conf import settings
 from store.models import Product  # Matching your GTD store app
 from watch_and_buy.models import WatchAndBuyVideo
 class Order(models.Model):
+    
     PAYMENT_STATUS = [('Pending', 'Pending'), ('Paid', 'Paid'), ('Failed', 'Failed')]
     ORDER_STATUS = [('Processing', 'Processing'), ('Shipped', 'Shipped'), ('Delivered', 'Delivered'), ('Cancelled', 'Cancelled')]
 
@@ -15,7 +16,6 @@ class Order(models.Model):
     # Shipping details
     shipping_address = models.TextField()
     city = models.CharField(max_length=100)
-    state = models.CharField(max_length=100)
     zip_code = models.CharField(max_length=20)
     phone = models.CharField(max_length=15)
 
@@ -30,7 +30,11 @@ class Order(models.Model):
     state = models.CharField(max_length=100, blank=True) # ✅ New
     country = models.CharField(max_length=100, default='India') #
     tracking_link = models.URLField(max_length=500, blank=True, null=True)
-    
+    tracking_note = models.TextField(
+        blank=True, 
+        null=True, 
+        help_text="Enter Tracking ID and instructions (e.g. ID: 12345. Track at dtdc.in)"
+    )
     def __str__(self):
         return f"Order {self.id} - {self.user.email}"
 

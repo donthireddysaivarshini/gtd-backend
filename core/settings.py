@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'dj_rest_auth.registration',
+    'admin_extra_buttons',
 
     # Local Apps
     'accounts',

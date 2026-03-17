@@ -1,0 +1,18 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h3>Bulk Upload for: {{ product.title }}</h3>
+    <hr>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div style="margin: 20px 0;">
+            <label style="display: block; margin-bottom: 10px; font-weight: bold;">Select Multiple Images:</label>
+            <input type="file" name="images" multiple accept="image/*" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="background:#ec4899; border:none; padding:10px 20px;">
+            Start Upload
+        </button>
+        <a href=".." class="btn btn-default" style="margin-left: 10px;">Back to Product</a>
+    </form>
+</div>
+{% endblock %}

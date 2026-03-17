@@ -2,6 +2,12 @@ from django.contrib import admin
 from .models import Product, ProductImage, ProductVariant, Color, Size, Category, Review, SiteConfig
 from django.utils.html import format_html
 from .models import Coupon, SiteConfig
+from django.shortcuts import render # Added for custom view
+from django.http import HttpResponseRedirect # Added for redirect
+
+# --- Third Party Import ---
+from admin_extra_buttons.api import ExtraButtonsMixin, button, link
+from admin_extra_buttons.utils import HttpResponseRedirectToReferrer
 
 @admin.register(Coupon)
 class CouponAdmin(admin.ModelAdmin):
@@ -10,13 +16,11 @@ class CouponAdmin(admin.ModelAdmin):
     search_fields = ('code',)
     readonly_fields = ('uses_count',)
 
-# ✅ Register SiteConfig (Miscellaneous Charges)
 @admin.register(SiteConfig)
 class SiteConfigAdmin(admin.ModelAdmin):
     list_display = ('shipping_fee', 'free_shipping_threshold', 'tax_percentage')
     
     def has_add_permission(self, request):
-        # Prevent multiple config entries; only allow 1
         return SiteConfig.objects.count() == 0
 
 class ProductImageInline(admin.TabularInline):
@@ -29,14 +33,15 @@ class ProductImageInline(admin.TabularInline):
         if obj.image:
             return format_html('<img src="{}" style="width: 50px; height: auto;" />', obj.image.url)
         return "No Image"
+
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 1
-    # Added price_override here so you can set extra charges for sizes
     fields = ['color', 'size', 'stock', 'price_override']
 
 @admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
+# Added ExtraButtonsMixin here
+class ProductAdmin(ExtraButtonsMixin, admin.ModelAdmin):
     list_display = (
         'sku', 'title', 'category', 'price', 
         'is_new_arrival', 'is_best_seller', 
@@ -47,7 +52,28 @@ class ProductAdmin(admin.ModelAdmin):
         'is_featured_lehenga', 'is_saree_collection'
     )
     prepopulated_fields = {'slug': ('title',)} 
-    inlines = [ProductImageInline, ProductVariantInline] # They will appear at the bottom
+    inlines = [ProductImageInline, ProductVariantInline]
+
+    # --- NEW: Bulk Upload Button Logic ---
+    @button(label=' Bulk Upload Images', 
+            html_attrs={
+                'class': 'btn btn-info btn-sm btn-flat', # Standard Jazzmin button style
+                'style': 'background-color: #ec4899; border-color: #ec4899; color: white; margin-top: 10px; font-weight: 600;'
+            })
+    def bulk_upload(self, request, pk):
+        context = self.get_common_context(request, pk, title="Bulk Image Upload")
+        obj = self.get_object(request, pk)
+        
+        if request.method == 'POST':
+            files = request.FILES.getlist('images')
+            for f in files:
+                ProductImage.objects.create(product=obj, image=f)
+            self.message_user(request, f"Successfully uploaded {len(files)} images to {obj.title}")
+            return HttpResponseRedirectToReferrer(request)
+        
+        context['product'] = obj
+        return render(request, 'admin/store/bulk_upload.html', context)
+
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ('user_name', 'product', 'rating', 'is_featured','image_preview')
@@ -58,10 +84,7 @@ class ReviewAdmin(admin.ModelAdmin):
         if obj.image:
             return format_html('<img src="{}" style="width: 100px; height: auto;" />', obj.image.url)
         return "No Image"
-# Register models only once to avoid the "AlreadyRegistered" crash
+
 admin.site.register(Category)
-
-
 admin.site.register(Color)
 admin.site.register(Size)
-

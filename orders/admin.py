@@ -95,7 +95,7 @@ class OrderAdmin(admin.ModelAdmin):
             'fields': ('total_amount', 'razorpay_order_id', 'payment_status', 'order_status')
         }),
         ('Shipping & Tracking', {
-            'fields': ('tracking_link','country', 'state', 'city', 'shipping_address', 'landmark', 'zip_code')
+            'fields': ('tracking_link','tracking_note','country', 'state', 'city', 'shipping_address', 'landmark', 'zip_code')
         }),
         ('System Timestamps', {
             'fields': ('created_at',),
