@@ -182,3 +182,7 @@ class FeaturedReviewListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Review.objects.filter(is_featured=True).order_by('-created_at')
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context

@@ -7,11 +7,11 @@ class WebContentDetailView(APIView):
     def get(self, request):
         slides = HeroSlide.objects.filter(is_active=True)
         story = BrandStorySettings.load()
-        # Fetch active announcements and return just the text
         announcements = Announcement.objects.filter(is_active=True).values_list('message', flat=True)
 
         return Response({
-            "hero_slides": HeroSlideSerializer(slides, many=True).data,
-            "brand_story": BrandStorySerializer(story).data,
-            "announcements": list(announcements) # One-by-one strings for the header
+            # 🔥 ADD context={'request': request} to both below
+            "hero_slides": HeroSlideSerializer(slides, many=True, context={'request': request}).data,
+            "brand_story": BrandStorySerializer(story, context={'request': request}).data,
+            "announcements": list(announcements)
         })

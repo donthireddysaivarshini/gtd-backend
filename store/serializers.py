@@ -23,14 +23,20 @@ class ProductVariantSerializer(serializers.ModelSerializer):
     
     # Calculate the total price for this variant
     final_price = serializers.SerializerMethodField()
+    final_original_price = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductVariant
-        fields = ['id', 'color', 'color_name', 'size', 'size_name', 'stock', 'price_override', 'final_price']
+        fields = ['id', 'color', 'color_name', 'size', 'size_name', 'stock', 'price_override', 'final_price','final_original_price']
 
     def get_final_price(self, obj):
         # Adds base price from Product model to the override from Variant model
         return obj.product.price + obj.price_override
+    
+    def get_final_original_price(self, obj):
+        if obj.product.original_price:
+            return obj.product.original_price + obj.price_override
+        return None
 
 class ReviewSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.title')
@@ -77,6 +83,8 @@ class ProductSerializer(serializers.ModelSerializer):
             color_map[c_id]["sizes"].append({
                 "size": variant.size.name,
                 "price": obj.price + variant.price_override,
+                # 🔥 Add this line so React knows the new original price
+                "original_price": (obj.original_price + variant.price_override) if obj.original_price else None,
                 "stock": variant.stock,
                 "inStock": variant.stock > 0
             })
